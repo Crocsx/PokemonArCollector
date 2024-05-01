@@ -4,13 +4,15 @@ import "react-loading-skeleton/dist/skeleton.css";
 import "./App.css";
 import { toast } from "react-toastify";
 import Skeleton from "react-loading-skeleton";
+import { toKatakana } from "wanakana";
 
 const App = () => {
   const [data, setData] = useState<Collection>({ sets: [] });
+  const [searchTerm, setSearchTerm] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  console.log(process.env);
   useEffect(() => {
     setIsLoading(true);
     fetch(
@@ -33,10 +35,17 @@ const App = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleCheckboxChange = (checked: boolean, i: number, j: number) => {
+  const handleCheckboxChange = (checked: boolean, id: string) => {
     setData((prevData) => {
       const newData = { ...prevData };
-      newData.sets[i].cards[j].collected = checked;
+      for (let set of newData.sets) {
+        for (let card of set.cards) {
+          if (card.id === id) {
+            card.collected = checked;
+            break;
+          }
+        }
+      }
       return newData;
     });
   };
@@ -77,6 +86,12 @@ const App = () => {
     );
   }, [data]);
 
+  const filteredData = data.sets.filter((set) =>
+    set.cards.some((card) =>
+      card.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
   return (
     <div>
       {isLoading ? (
@@ -86,16 +101,22 @@ const App = () => {
         </div>
       ) : (
         <>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(toKatakana(e.target.value))}
+          />
           <h2 className="collection-status">
             You have collected {collectedCards} out of {totalCards} cards.
           </h2>
-          {data.sets.map(({ title, cards }, i) => (
+          {filteredData.map(({ title, cards }, i) => (
             <div key={title} className="set">
               <h2 className="set-title">{title}</h2>
               <div className="set-container">
-                {cards.map(({ image, link, name, collected }, j) => (
+                {cards.map(({ image, link, name, collected, id }, j) => (
                   <div
-                    key={name}
+                    key={id}
                     className={`card ${collected ? "collected" : ""}`}
                   >
                     <img src={image} className="card-img" alt={name} />
@@ -113,7 +134,7 @@ const App = () => {
                         className="card-checkbox"
                         checked={collected || false}
                         onChange={(checked) =>
-                          handleCheckboxChange(checked.target.checked, i, j)
+                          handleCheckboxChange(checked.target.checked, id)
                         }
                       />
                     </div>

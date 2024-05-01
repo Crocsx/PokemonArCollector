@@ -12,4 +12,5 @@ export type CollectionCard = {
   image: string;
   link: string;
   collected: boolean;
+  id: string;
 };
