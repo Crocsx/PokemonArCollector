@@ -146,7 +146,7 @@ const App = () => {
         </>
       )}
       <button onClick={handleSave} disabled={isSaving}>
-        {isLoading ? "Loading..." : "Load Data"}
+        {isLoading ? "Loading..." : "Save"}
       </button>
     </div>
   );
